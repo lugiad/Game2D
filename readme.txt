@@ -35,3 +35,45 @@ JS学习计划
    它的原型为null;这样一个个互相关联的对象树,就叫做原型链
    
 2.1.使用原型构造对象
+  
+  有两种方法:
+  
+  方法1:
+    
+    var test = funtion(value1,value2){//构造器
+       //代码
+       this.value1 = 1;
+       this.value2 = 2;
+    }
+    
+    test.prototype = {//通过对象字面量来设定原型
+       //通过键值对来声明属性与方法
+       
+         x:10,
+         y:20,
+         z:funciton (){
+            return x+y;
+         }
+       
+       };
+   
+   方法2:
+      
+    var test = funtion(value1,value2){//构造器
+       //代码
+       this.value1 = 1;
+       this.value2 = 2;
+    }
+    
+    test.prototype = function(){//通过自执行函数来设定原型
+         //通过闭包来封装私有方法达到public与private的功能
+         x = 10,
+         z = funciton(a){
+           return a ;
+         };
+         
+         return{//通过return将方法露出
+           x:x,
+           z:z
+         };
+    }();
