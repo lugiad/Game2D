@@ -5,133 +5,146 @@
     <title></title>
 </head>
 <body>
-<canvas width="800px" height="400px" id="canvas" style="border:1px solid"></canvas>
+    <canvas width="800px" height="400px" id="canvas" style="border:1px solid"></canvas>
 </body>
 <script>
     (function () {
 
-        var canvas, context, item_size, row_count, col_cout, items;
+        var canvas,context,item_size,row_count,col_cout,items;
         //初始化配置
-        //空0,墙1,吃豆人2,豆子3
         var config = function () {
             canvas = document.getElementById('canvas');
             context = canvas.getContext('2d');
-            items = []
             item_size = 80;
             row_count = 10;
             col_count = 5;
+            items = [];
+        };
+        //清楚画布
+        var clear = function (x, y) {
+            context.clearRect(x*item_size,y*item_size,item_size,item_size)
         }
         //吃豆人
-        ////////要求：为吃豆人添加键盘事件
-            var pac_man = function (x, y) {
-                width = x*item_size
-                var grd = context.createRadialGradient(width + item_size / 2, y + item_size / 2, 20, width + item_size / 2, y + item_size / 2, 70);
-                grd.addColorStop(0, "yellow");
-                grd.addColorStop(1, "black");
+        var pac_man = {
+            x:0,
+            y:0,
+            direction:3,
+            draw :function (x, y, direction) {
+                context.clearRect(this.x*item_size,this.y*item_size,item_size,item_size)
+                this.x = x;
+                this.y = y;
+                this.direction = direction;
+                var width = this.x*item_size;
+                var height = this.y*item_size;
+                var grd=context.createRadialGradient(width+item_size/2,height+item_size/2,20,width+item_size/2,height+item_size/2,70);
+                grd.addColorStop(0,"yellow");
+                grd.addColorStop(1,"wheat");
                 context.fillStyle = grd
                 context.beginPath();
-                context.moveTo(width + item_size / 2, y + item_size / 2)
-                context.arc(width + item_size / 2, y + item_size / 2, (item_size - 2) / 2, 0.2 * Math.PI, 1.8 * Math.PI);
-                context.lineTo(width + item_size / 2, y + item_size / 2)
-                context.fill();
-                items[x][y] = 2
-            }
-        
-        //键盘监听
-        var ListenKeyBoard = function () {
-            document.onkeydown = function (event) {
-                if(event.keyCode==39){
-                    pac_man.x += 1
-                   if(crash(pac_man.x,pac_man.y)){
-                       pac_man(pac_man.x,pac_man.y);
-                   };
+                context.moveTo(width+item_size/2,height+item_size/2)
+                switch(this.direction){
+                    case 1:
+                        context.arc(width+item_size/2,height+item_size/2,(item_size-2)/2,1.2*Math.PI,0.8*Math.PI);
+                        break;
+                    case 2:
+                        context.arc(width+item_size/2,height+item_size/2,(item_size-2)/2,1.7*Math.PI,1.3*Math.PI);
+                        break;
+                    case 3:
+                        context.arc(width+item_size/2,height+item_size/2,(item_size-2)/2,0.2*Math.PI,1.8*Math.PI);
+                        break;
+                    case 4:
+                        context.arc(width+item_size/2,height+item_size/2,(item_size-2)/2,0.7*Math.PI,0.3*Math.PI);
+                        break;
                 }
-            };
-        };
-        //吃豆子
-
-        var eat = function(x,y){
-             context.fillStyle("yellow");
-             context.arc(x+item_size/2,y+item_size/2,item_size/2-2,0,Math.PI*2);
-             context.fill()
-        }
-
-        //碰撞判断
-        var crash = function (x, y) {
-            console.log("item",items[x][y])
-            switch (items[x][y]) {
-                case 0:return true;break;
-                case 1:return false;break;
-                case 3:eat(); return true;break;
-
+                context.lineTo(width+item_size/2,height+item_size/2)
+                context.fill();
             }
         }
-
         //砖头
-
         var brick = function (x, y) {
-            var grd = context.createRadialGradient(x + 100, y + 100, 20, x + 100, y + 100, 150);
-            grd.addColorStop(0, "brown");
-            grd.addColorStop(1, "sandyBrown");
+            var grd=context.createRadialGradient(x+100,y+100,20,x+100,y+100,150);
+            grd.addColorStop(0,"brown");
+            grd.addColorStop(1,"sandyBrown");
             context.fillStyle = grd
-            context.fillRect(x, y, item_size, item_size)
+            context.fillRect(x,y,item_size,item_size)
             context.fillStyle = "sandyBrown"
-            context.fillRect(x + 10, y + 10, item_size - 20, item_size - 20)
+            context.fillRect(x+10,y+10,item_size-20,item_size-20)
+        };
+        //豆子
+        var bean = function (x, y) {
+            context.fillStyle = "yellow"
+            context.fillRect(x+10,y+10,20,20)
         }
         //网格
         var gridding = function () {
-            for (var i = 0; i < row_count; i++) {//x
+            for(var i = 0;i < row_count;i++){
                 items[i] = []
-                for (var j = 0; j < col_count; j++) {//y
-                    context.strokeRect(i * item_size, j * item_size, item_size, item_size)
+                for(var j = 0;j < col_count;j++){
                     items[i][j] = 0;
+                    //context.strokeRect(i*item_size,j*item_size,item_size,item_size)
                 }
             }
-        }
+        };
         //渲染
         var render = function () {
             /*一行中的元素渲染
              @index 行序号
-             @start 开始列,x
-             @end 结束列,x
-             @
+             @start 开始列
+             @end 结束列
              */
             var line = function (index, start, end) {
-                for (var i = start; i < end; i++) {
-                    brick(i * item_size, index * item_size)
-                    items[i][index] = 1;
+                for(var i = start;i < end;i++){
+                    brick(i*item_size,index*item_size)
+                    items[i][index] = 1
                 }
             }
             var col = function (index, start, end) {
-                for (var i = start; i < end; i++) {
-                    brick(index * item_size, i * item_size)
-                    items[i][index] = 1;
+                for(var i = start;i < end;i++){
+                    brick(index*item_size,i*item_size)
+                    items[i][index] = 1
                 }
             }
-            pac_man(0, 0)
-            pac_man.x = 0;
-            pac_man.y = 0;
-            ////////要求：参照一行中的元素渲染方法，编写一列中的元素渲染
-            ////////////  调用一列中的元素渲染方法重新绘制砖块列
-            var line0_0 = line(0, 3, 7)
-            var line1_0 = line(1, 0, 2)
-            var line1_1 = line(1, 4, 5)
-            var line1_2 = line(1, 6, 9)
-            var line2_0 = line(2, 0, 1)
-            var line2_1 = line(2, 3, 5)
-            var line3_0 = line(3, 0, 1)
-            var line3_1 = line(3, 2, 4)
-            var line3_2 = line(3, 6, 7)
-            var line4_0 = line(4, 0, 1)
-            var line4_1 = line(4, 5, 7)
-            var col9_0 = col(8,2,4);
-            console.log(items[0][0]);
+            pac_man.draw(0,0,3)
+            var line0_0 = line(0,3,7)
+            var line1_0 = line(1,0,2)
+            var line1_1 = line(1,4,5)
+            var line1_2 = line(1,6,9)
+            var line2_0 = line(2,0,1)
+            var line2_1 = line(2,3,5)
+            var line2_2 = line(2,8,9)
+            var line3_0 = line(3,0,1)
+            var line3_1 = line(3,2,4)
+            var line3_2 = line(3,6,7)
+            var line2_3 = line(3,8,9)
+            var line4_0 = line(4,0,1)
+            var line4_1 = line(4,5,7)
+        };
+        //碰撞检测
+        var collision = function (x,y) {
+            switch(items[x][y]){
+                case 0 : return true;
+                case 1 : return false;
+            }
+        }
+        //键盘事件
+        var events = function () {
+            document.addEventListener('keydown', function (e) {
+                var next_x = pac_man.x,next_y = pac_man.y,direction
+                if(e.keyCode == 37){next_x -=1;direction=1}
+                if(e.keyCode == 38){next_y -=1;direction=2}
+                if(e.keyCode == 39){next_x +=1;direction=3}
+                if(e.keyCode == 40){next_y +=1;direction=4}
+                if(collision(next_x,next_y)){
+                    pac_man.draw(next_x,next_y,direction);
+                    console.log("next_x",next_x,"pac_man",pac_man)
+                }
+            })
         }
 
         config();
         gridding();
         render();
-        ListenKeyBoard();
+        events();
     })()
 
 </script>
